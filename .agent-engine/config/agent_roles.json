@@ -1,0 +1,266 @@
+{
+  "$schema": "./agent_roles_schema.json",
+  "version": "1.0.0",
+  "agents": [
+    {
+      "id": "overseer",
+      "name": "OVERSEER",
+      "role": "Master Orchestrator & Project Manager",
+      "responsibilities": [
+        "Receive and interpret user requirements",
+        "Coordinate all other agents via A2A Protocol",
+        "Monitor progress and resolve conflicts",
+        "Maintain project_memory.md audit trail",
+        "Ensure quality gates are met",
+        "Report final project status to user"
+      ],
+      "tools": [
+        "a2a_broadcast",
+        "a2a_delegate",
+        "project_memory_writer",
+        "github_api"
+      ],
+      "communicates_with": ["all_agents"],
+      "triggers": ["user_input"],
+      "outputs": ["project_complete", "status_updates"],
+      "llm_preference": "claude-3.5-sonnet",
+      "max_iterations": 50,
+      "failover_to": null
+    },
+    {
+      "id": "prd_generator",
+      "name": "PRD_GENERATOR",
+      "role": "Product Requirements Specialist",
+      "responsibilities": [
+        "Transform user ideas into comprehensive PRDs",
+        "Define user stories and acceptance criteria",
+        "Identify stakeholders and success metrics",
+        "Create technical requirements outline"
+      ],
+      "tools": [
+        "web_search",
+        "template_prd",
+        "markdown_writer"
+      ],
+      "communicates_with": ["overseer", "researcher", "compliance_agent"],
+      "triggers": ["project_kickoff"],
+      "outputs": ["prd_document"],
+      "llm_preference": "gpt-4",
+      "max_iterations": 10,
+      "failover_to": "overseer"
+    },
+    {
+      "id": "researcher",
+      "name": "RESEARCHER",
+      "role": "Domain & Technology Research Specialist",
+      "responsibilities": [
+        "Research industry best practices",
+        "Validate technology stack choices",
+        "Find relevant documentation and APIs",
+        "Identify compliance requirements",
+        "Research competitive solutions"
+      ],
+      "tools": [
+        "web_search",
+        "github_search",
+        "documentation_reader"
+      ],
+      "communicates_with": ["overseer", "prd_generator", "compliance_agent", "implementation_agent"],
+      "triggers": ["prd_ready"],
+      "outputs": ["research_report", "tech_recommendations"],
+      "llm_preference": "gemini-2.0-flash-thinking",
+      "max_iterations": 15,
+      "failover_to": "overseer"
+    },
+    {
+      "id": "scaffolder",
+      "name": "SCAFFOLDER",
+      "role": "Project Structure Architect",
+      "responsibilities": [
+        "Create folder structure (.github, .vscode, .agent-engine, docs, frontend, backend)",
+        "Generate boilerplate files",
+        "Set up configuration files (.env, tsconfig, package.json)",
+        "Initialize git repository",
+        "Create README and basic documentation"
+      ],
+      "tools": [
+        "file_system",
+        "git_cli",
+        "template_engine"
+      ],
+      "communicates_with": ["overseer", "env_setter"],
+      "triggers": ["prd_validated"],
+      "outputs": ["project_structure"],
+      "llm_preference": "claude-3.5-sonnet",
+      "max_iterations": 5,
+      "failover_to": "overseer"
+    },
+    {
+      "id": "implementation_agent",
+      "name": "IMPLEMENTATION_AGENT",
+      "role": "Code Generation Specialist",
+      "responsibilities": [
+        "Generate application code (frontend, backend)",
+        "Implement business logic based on PRD",
+        "Create database schemas and migrations",
+        "Build API endpoints and UI components",
+        "Ensure code quality and best practices"
+      ],
+      "tools": [
+        "code_generator",
+        "file_system",
+        "linter",
+        "formatter"
+      ],
+      "communicates_with": ["overseer", "researcher", "compliance_agent", "test_engineer"],
+      "triggers": ["structure_ready"],
+      "outputs": ["application_code"],
+      "llm_preference": "claude-3.5-sonnet",
+      "max_iterations": 30,
+      "failover_to": "overseer"
+    },
+    {
+      "id": "compliance_agent",
+      "name": "COMPLIANCE_AGENT",
+      "role": "Quality & Standards Validator",
+      "responsibilities": [
+        "Validate PRD against framework templates",
+        "Check code against official documentation",
+        "Ensure compliance with domain regulations",
+        "Verify ASOP quality gates",
+        "Block progression on critical failures",
+        "Suggest corrections and improvements"
+      ],
+      "tools": [
+        "web_search",
+        "documentation_validator",
+        "asop_checker",
+        "code_analyzer"
+      ],
+      "communicates_with": ["all_agents"],
+      "triggers": ["any_agent_output"],
+      "outputs": ["validation_report", "go_no_go_decision"],
+      "llm_preference": "gpt-4",
+      "max_iterations": 20,
+      "failover_to": null,
+      "critical": true
+    },
+    {
+      "id": "test_engineer",
+      "name": "TEST_ENGINEER",
+      "role": "Testing & QA Specialist",
+      "responsibilities": [
+        "Generate unit tests",
+        "Create integration tests",
+        "Write E2E test scenarios",
+        "Set up test infrastructure",
+        "Run tests and report results"
+      ],
+      "tools": [
+        "test_framework",
+        "code_generator",
+        "test_runner"
+      ],
+      "communicates_with": ["overseer", "implementation_agent", "compliance_agent"],
+      "triggers": ["code_complete"],
+      "outputs": ["test_suite", "test_report"],
+      "llm_preference": "claude-3.5-sonnet",
+      "max_iterations": 15,
+      "failover_to": "implementation_agent"
+    },
+    {
+      "id": "doc_writer",
+      "name": "DOC_WRITER",
+      "role": "Documentation Specialist",
+      "responsibilities": [
+        "Write comprehensive README",
+        "Document API endpoints",
+        "Create architecture diagrams",
+        "Write deployment guides",
+        "Generate changelogs"
+      ],
+      "tools": [
+        "markdown_writer",
+        "diagram_generator",
+        "template_engine"
+      ],
+      "communicates_with": ["overseer", "all_agents"],
+      "triggers": ["project_near_complete"],
+      "outputs": ["documentation_complete"],
+      "llm_preference": "gpt-4",
+      "max_iterations": 10,
+      "failover_to": "overseer"
+    },
+    {
+      "id": "env_setter",
+      "name": "ENV_SETTER",
+      "role": "Environment Setup Specialist",
+      "responsibilities": [
+        "Check system requirements (Node.js, Docker, etc.)",
+        "Create .env templates",
+        "Set up local development environment",
+        "Configure CI/CD pipelines",
+        "Generate deployment scripts"
+      ],
+      "tools": [
+        "system_check",
+        "file_system",
+        "github_actions"
+      ],
+      "communicates_with": ["overseer", "scaffolder", "implementation_agent"],
+      "triggers": ["structure_ready"],
+      "outputs": ["environment_ready"],
+      "llm_preference": "claude-3.5-sonnet",
+      "max_iterations": 8,
+      "failover_to": "scaffolder"
+    }
+  ],
+  "workflow": {
+    "stages": [
+      {
+        "name": "initialization",
+        "agents": ["overseer"],
+        "quality_gate": "input_validated"
+      },
+      {
+        "name": "requirements",
+        "agents": ["prd_generator", "researcher"],
+        "parallel": true,
+        "quality_gate": "prd_approved"
+      },
+      {
+        "name": "planning",
+        "agents": ["scaffolder", "env_setter"],
+        "parallel": true,
+        "quality_gate": "structure_validated"
+      },
+      {
+        "name": "implementation",
+        "agents": ["implementation_agent", "test_engineer"],
+        "parallel": false,
+        "quality_gate": "code_reviewed"
+      },
+      {
+        "name": "finalization",
+        "agents": ["doc_writer"],
+        "quality_gate": "documentation_complete"
+      },
+      {
+        "name": "delivery",
+        "agents": ["overseer"],
+        "quality_gate": "project_ready"
+      }
+    ]
+  },
+  "a2a_protocol": {
+    "enabled": true,
+    "version": "1.0",
+    "discovery_endpoint": "local",
+    "agent_cards_published": true
+  },
+  "asop_quality_gates": {
+    "enabled": true,
+    "strict_mode": true,
+    "validation_agent": "compliance_agent"
+  }
+}
